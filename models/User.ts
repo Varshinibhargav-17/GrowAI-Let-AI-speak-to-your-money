@@ -16,6 +16,7 @@ const UserSchema = new Schema(
     debt: { type: Object },
     financialFocus: { type: Object },
     career: { type: Object },
+    selectedBanks: [{ type: String }],
   },
   { timestamps: true }
 );

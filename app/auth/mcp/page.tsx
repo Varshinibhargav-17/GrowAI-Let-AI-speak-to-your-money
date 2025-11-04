@@ -637,6 +637,13 @@ export default function MCPPage() {
                   selectedBanks
                 );
 
+                // Save selectedBanks to user profile
+                await fetch("/api/profile", {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ selectedBanks }),
+                });
+
                 // Save to localStorage for dashboard
                 localStorage.setItem('financialData', JSON.stringify(financialData));
 

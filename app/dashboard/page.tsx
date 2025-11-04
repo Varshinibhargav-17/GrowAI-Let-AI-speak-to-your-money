@@ -10,6 +10,7 @@ import TaxSummaryCard from "@/components/TaxSummaryCard";
 import TaxBreakdownChart from "@/components/TaxBreakdownChart";
 import NudgeCard from "@/components/NudgeCard";
 import NudgeCategoryTabs from "@/components/NudgeCategoryTabs";
+import { FinancialDataGenerator } from "@/lib/data-templates/generators/data-generator";
 
 export default function DashboardPage() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -18,6 +19,7 @@ export default function DashboardPage() {
   const [chatLoading, setChatLoading] = useState(false);
   const [taxData, setTaxData] = useState<any>(null);
   const [activeNudgeCategory, setActiveNudgeCategory] = useState("All");
+  const [financialData, setFinancialData] = useState<any>(null);
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -34,11 +36,11 @@ export default function DashboardPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: chatInput }),
+        body: JSON.stringify({ message: chatInput, financialData }),
       });
 
       const data = await res.json();
-      const botReply = data.reply || "No response.";
+      const botReply = data.response || data.reply || "No response.";
       setChatMessages([...newMessages, { sender: "bot", text: botReply }]);
     } catch (err) {
       setChatMessages([...newMessages, { sender: "bot", text: "Error connecting to GrowAI." }]);
@@ -47,76 +49,61 @@ export default function DashboardPage() {
     }
   };
 
-  // Tax data initialization with real data from localStorage
+  // Financial data initialization using FinancialDataGenerator
   useEffect(() => {
     const loadFinancialData = () => {
-      const storedData = localStorage.getItem('financialData');
-      if (storedData) {
-        const financialData = JSON.parse(storedData);
-        const income = financialData.income.monthly * 12;
+      const generatedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
+      setFinancialData(generatedData);
 
-        let taxPayable = 0;
-        let slabs = [];
+      const income = generatedData.income.monthly * 12;
 
-        if (income <= 300000) {
-          slabs = [{ slab: "0 - 3L", rate: 0, tax: 0 }];
-          taxPayable = 0;
-        } else if (income <= 600000) {
-          const taxable = income - 300000;
-          taxPayable = taxable * 0.05;
-          slabs = [
-            { slab: "0 - 3L", rate: 0, tax: 0 },
-            { slab: "3L - 6L", rate: 0.05, tax: taxPayable }
-          ];
-        } else if (income <= 900000) {
-          taxPayable = 15000 + (income - 600000) * 0.1;
-          slabs = [
-            { slab: "0 - 3L", rate: 0, tax: 0 },
-            { slab: "3L - 6L", rate: 0.05, tax: 15000 },
-            { slab: "6L - 9L", rate: 0.10, tax: (income - 600000) * 0.1 }
-          ];
-        } else if (income <= 1200000) {
-          taxPayable = 45000 + (income - 900000) * 0.15;
-          slabs = [
-            { slab: "0 - 3L", rate: 0, tax: 0 },
-            { slab: "3L - 6L", rate: 0.05, tax: 15000 },
-            { slab: "6L - 9L", rate: 0.10, tax: 30000 },
-            { slab: "9L - 12L", rate: 0.15, tax: (income - 900000) * 0.15 }
-          ];
-        } else {
-          taxPayable = 90000 + (income - 1200000) * 0.2;
-          slabs = [
-            { slab: "0 - 3L", rate: 0, tax: 0 },
-            { slab: "3L - 6L", rate: 0.05, tax: 15000 },
-            { slab: "6L - 9L", rate: 0.10, tax: 30000 },
-            { slab: "9L - 12L", rate: 0.15, tax: 45000 },
-            { slab: "12L+", rate: 0.20, tax: (income - 1200000) * 0.2 }
-          ];
-        }
+      let taxPayable = 0;
+      let slabs = [];
 
-        const taxData = {
-          totalIncome: income,
-          deductibleExpenses: Math.floor(income * 0.1),
-          taxSlabs: slabs,
-          totalTax: Math.round(taxPayable),
-          quarterlyTax: Math.round(taxPayable / 4),
-        };
-        setTaxData(taxData);
+      if (income <= 300000) {
+        slabs = [{ slab: "0 - 3L", rate: 0, tax: 0 }];
+        taxPayable = 0;
+      } else if (income <= 600000) {
+        const taxable = income - 300000;
+        taxPayable = taxable * 0.05;
+        slabs = [
+          { slab: "0 - 3L", rate: 0, tax: 0 },
+          { slab: "3L - 6L", rate: 0.05, tax: taxPayable }
+        ];
+      } else if (income <= 900000) {
+        taxPayable = 15000 + (income - 600000) * 0.1;
+        slabs = [
+          { slab: "0 - 3L", rate: 0, tax: 0 },
+          { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+          { slab: "6L - 9L", rate: 0.10, tax: (income - 600000) * 0.1 }
+        ];
+      } else if (income <= 1200000) {
+        taxPayable = 45000 + (income - 900000) * 0.15;
+        slabs = [
+          { slab: "0 - 3L", rate: 0, tax: 0 },
+          { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+          { slab: "6L - 9L", rate: 0.10, tax: 30000 },
+          { slab: "9L - 12L", rate: 0.15, tax: (income - 900000) * 0.15 }
+        ];
       } else {
-        const mockData = {
-          totalIncome: 720000,
-          deductibleExpenses: 120000,
-          taxSlabs: [
-            { slab: "0 - 3L", rate: 0, tax: 0 },
-            { slab: "3L - 6L", rate: 0.05, tax: 15000 },
-            { slab: "6L - 9L", rate: 0.10, tax: 30000 },
-            { slab: "9L+", rate: 0.15, tax: 15000 },
-          ],
-          totalTax: 60000,
-          quarterlyTax: 15000,
-        };
-        setTaxData(mockData);
+        taxPayable = 90000 + (income - 1200000) * 0.2;
+        slabs = [
+          { slab: "0 - 3L", rate: 0, tax: 0 },
+          { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+          { slab: "6L - 9L", rate: 0.10, tax: 30000 },
+          { slab: "9L - 12L", rate: 0.15, tax: 45000 },
+          { slab: "12L+", rate: 0.20, tax: (income - 1200000) * 0.2 }
+        ];
       }
+
+      const taxData = {
+        totalIncome: income,
+        deductibleExpenses: Math.floor(income * 0.1),
+        taxSlabs: slabs,
+        totalTax: Math.round(taxPayable),
+        quarterlyTax: Math.round(taxPayable / 4),
+      };
+      setTaxData(taxData);
     };
 
     loadFinancialData();
@@ -275,9 +262,7 @@ export default function DashboardPage() {
           {/* Quick Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-slide-up">
             {(() => {
-              const storedData = localStorage.getItem('financialData');
-              if (storedData) {
-                const financialData = JSON.parse(storedData);
+              if (financialData) {
                 const income = financialData.income.monthly;
                 const expenses = Object.values(financialData.expenses).reduce((sum: number, val: any) => sum + (typeof val === 'number' ? val : 0), 0);
                 const savings = income - expenses;
