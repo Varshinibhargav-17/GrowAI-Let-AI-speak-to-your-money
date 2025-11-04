@@ -1,66 +1,7 @@
 import { youngProfessionalTemplate } from '../profiles/young-professional';
+import { establishedInvestorTemplate } from '../profiles/established-investor';
+import { retirementFocusedTemplate } from '../profiles/retirement-focused';
 import { bankAccountTemplates } from '../banks/bank-templates';
-
-// Temporary templates until other profile files are created
-const establishedInvestorTemplate = {
-  profile: {
-    type: "established_investor",
-    risk_tolerance: "medium",
-    financial_focus: ["wealth_accumulation", "tax_optimization", "portfolio_diversification"]
-  },
-  income: {
-    monthly_range: [100000, 200000],
-    variability: "medium",
-    sources: ["salary", "investments"],
-    seasonal_pattern: {
-      high_months: [0, 1, 10, 11],
-      low_months: [5, 6]
-    }
-  },
-  expenses: {
-    housing: { range: [30000, 50000], category: "essential" },
-    food: { range: [10000, 15000], category: "essential" },
-    transportation: { range: [8000, 12000], category: "essential" },
-    entertainment: { range: [8000, 15000], category: "discretionary" },
-    professional_development: { range: [5000, 10000], category: "investment" }
-  },
-  debts: {},
-  investments: {
-    emergency_fund: { range: [200000, 500000] },
-    mutual_funds: { range: [500000, 1000000] },
-    stocks: { range: [200000, 500000] }
-  }
-};
-
-const retirementFocusedTemplate = {
-  profile: {
-    type: "retirement_focused",
-    risk_tolerance: "low",
-    financial_focus: ["retirement_savings", "income_generation", "wealth_preservation"]
-  },
-  income: {
-    monthly_range: [80000, 150000],
-    variability: "low",
-    sources: ["pension", "investments"],
-    seasonal_pattern: {
-      high_months: [0, 1, 10, 11],
-      low_months: [5, 6]
-    }
-  },
-  expenses: {
-    housing: { range: [20000, 35000], category: "essential" },
-    food: { range: [8000, 12000], category: "essential" },
-    transportation: { range: [5000, 8000], category: "essential" },
-    entertainment: { range: [5000, 10000], category: "discretionary" },
-    healthcare: { range: [3000, 6000], category: "essential" }
-  },
-  debts: {},
-  investments: {
-    emergency_fund: { range: [300000, 600000] },
-    mutual_funds: { range: [800000, 1500000] },
-    stocks: { range: [300000, 600000] }
-  }
-};
 
 export class FinancialDataGenerator {
   // 1. Generate random number within range
