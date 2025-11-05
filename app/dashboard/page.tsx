@@ -34,10 +34,18 @@ export default function DashboardPage() {
     setChatLoading(true);
 
     try {
+      // Flatten financial data for Gemini API
+      const flattenedFinancialData = financialData ? {
+        income: financialData.income?.monthly || 0,
+        expenses: Object.values(financialData.expenses || {}).reduce((sum: number, val: any) => sum + (typeof val === 'number' ? val : 0), 0),
+        investments: financialData.investments?.total || 0,
+        debts: financialData.debt || {}
+      } : null;
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: chatInput, financialData }),
+        body: JSON.stringify({ message: chatInput, financialData: flattenedFinancialData }),
       });
 
       const data = await res.json();
