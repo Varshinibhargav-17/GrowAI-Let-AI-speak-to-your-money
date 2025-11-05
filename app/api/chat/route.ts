@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     // Create detailed prompt
     const prompt = `
-    ROLE: You are FinCoach, an AI financial advisor. Provide specific, personalized financial advice.
+    ROLE: You are GrowAI, an AI financial advisor. Provide specific, personalized financial advice.
 
     USER FINANCIAL DATA:
     - Monthly Income: ₹${financialData.income}

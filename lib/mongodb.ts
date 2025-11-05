@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGO_URI || "mongodb://localhost:27017/fincoach";
+const MONGODB_URI = process.env.MONGO_URI || "mongodb://localhost:27017/growai";
 
 if (!MONGODB_URI) {
   throw new Error("⚠️ Please define MONGO_URI in .env.local");
