@@ -1,52 +1,207 @@
 // SmartNudgeCenter.tsx - Enhanced
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Lightbulb, RefreshCcw } from "lucide-react";
 import NudgeCard from "@/components/NudgeCard";
 import NudgeCategoryTabs from "@/components/NudgeCategoryTabs";
+import { FinancialDataGenerator } from "@/lib/data-templates/generators/data-generator";
 
 export default function SmartNudgeCenter() {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [financialData, setFinancialData] = useState<any>(null);
+  const [taxData, setTaxData] = useState<any>(null);
 
-  const nudges = [
-    {
-      id: 1,
-      title: "Increase your SIP by ₹1,000",
-      category: "Investments",
-      description:
-        "You've been consistent with ₹5,000/month SIP. Increasing it by ₹1,000 can grow your corpus by ₹3L in 10 years.",
-      icon: "📈",
-      color: "green",
-    },
-    {
-      id: 2,
-      title: "High Dining Expenses Detected",
-      category: "Spending",
-      description:
-        "Your food and dining spend rose 18% this month. Consider using meal plans or reward cards to optimize spending.",
-      icon: "🍽️",
-      color: "orange",
-    },
-    {
-      id: 3,
-      title: "Emergency Fund at 60% Target",
-      category: "Savings",
-      description:
-        "You've saved ₹60,000 out of ₹1L target. Keep ₹10,000/month aside for the next 4 months to complete it.",
-      icon: "💰",
-      color: "blue",
-    },
-    {
-      id: 4,
-      title: "Quarterly Tax Payment Due Soon",
-      category: "Tax",
-      description:
-        "Your estimated tax for this quarter is ₹15,000. Paying before 15th Dec will help you avoid late payment interest.",
-      icon: "📋",
-      color: "purple",
-    },
-  ];
+  useEffect(() => {
+    const loadFinancialData = async () => {
+      try {
+        // First try to fetch existing financial data from database
+        const profileRes = await fetch('/api/profile');
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          if (profileData.financialData) {
+            setFinancialData(profileData.financialData);
+          } else {
+            // If no stored data, generate new data based on user profile
+            const profileType = profileData?.financialProfileType || 'young_professional';
+            const selectedBanks = profileData?.selectedBanks || ['HDFC', 'ICICI'];
+
+            const generatedData = FinancialDataGenerator.generateFinancialData(profileType, selectedBanks);
+            setFinancialData(generatedData);
+
+            // Store the generated data in database
+            await fetch('/api/profile', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ financialData: generatedData }),
+            });
+          }
+        } else {
+          // Fallback to default data if profile fetch fails
+          const generatedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
+          setFinancialData(generatedData);
+        }
+      } catch (error) {
+        console.error('Error loading financial data:', error);
+        // Fallback to default data
+        const generatedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
+        setFinancialData(generatedData);
+      }
+    };
+
+    loadFinancialData();
+  }, []);
+
+  useEffect(() => {
+    // Calculate tax data using the financial data
+    if (financialData) {
+      const income = financialData.income.monthly * 12;
+
+      let taxPayable = 0;
+      let slabs = [];
+
+      if (income <= 300000) {
+        slabs = [{ slab: "0 - 3L", rate: 0, tax: 0 }];
+        taxPayable = 0;
+      } else if (income <= 600000) {
+        const taxable = income - 300000;
+        taxPayable = taxable * 0.05;
+        slabs = [
+          { slab: "0 - 3L", rate: 0, tax: 0 },
+          { slab: "3L - 6L", rate: 0.05, tax: taxPayable }
+        ];
+      } else if (income <= 900000) {
+        taxPayable = 15000 + (income - 600000) * 0.1;
+        slabs = [
+          { slab: "0 - 3L", rate: 0, tax: 0 },
+          { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+          { slab: "6L - 9L", rate: 0.10, tax: (income - 600000) * 0.1 }
+        ];
+      } else if (income <= 1200000) {
+        taxPayable = 45000 + (income - 900000) * 0.15;
+        slabs = [
+          { slab: "0 - 3L", rate: 0, tax: 0 },
+          { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+          { slab: "6L - 9L", rate: 0.10, tax: 30000 },
+          { slab: "9L - 12L", rate: 0.15, tax: (income - 900000) * 0.15 }
+        ];
+      } else {
+        taxPayable = 90000 + (income - 1200000) * 0.2;
+        slabs = [
+          { slab: "0 - 3L", rate: 0, tax: 0 },
+          { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+          { slab: "6L - 9L", rate: 0.10, tax: 30000 },
+          { slab: "9L - 12L", rate: 0.15, tax: 45000 },
+          { slab: "12L+", rate: 0.20, tax: (income - 1200000) * 0.2 }
+        ];
+      }
+
+      const taxData = {
+        totalIncome: income,
+        deductibleExpenses: Math.floor(income * 0.1),
+        taxSlabs: slabs,
+        totalTax: Math.round(taxPayable),
+        quarterlyTax: Math.round(taxPayable / 4),
+      };
+      setTaxData(taxData);
+    }
+  }, [financialData]);
+
+  const generateRuleBasedNudges = (userData: any) => {
+    const nudges = [];
+    const monthlyIncome = userData.income?.monthly || 0;
+    const monthlyExpenses = Object.values(userData.expenses || {}).reduce((sum: number, val: any) => sum + (typeof val === 'number' ? val : 0), 0);
+    const savingsRate = monthlyIncome > 0 ? (monthlyIncome - monthlyExpenses) / monthlyIncome : 0;
+    const emergencyFund = userData.savings?.emergency || 0;
+    const investments = userData.investments?.total || 0;
+    const creditCardUtilization = userData.debt?.creditCard?.utilization || 0;
+    const diningExpense = userData.expenses?.dining || 0;
+
+    if (savingsRate < 0.2) {
+      nudges.push({
+        id: 1,
+        title: "Increase Savings Rate",
+        category: "Savings",
+        description: `💡 Your savings rate is ${(savingsRate * 100).toFixed(0)}%. Aim for 20% to build wealth faster. Review discretionary spending.`,
+        icon: "💰",
+        color: "blue",
+      });
+    }
+
+    if (emergencyFund < 3 * monthlyExpenses) {
+      nudges.push({
+        id: 2,
+        title: "Build Emergency Fund",
+        category: "Savings",
+        description: `💰 Emergency fund covers ${(emergencyFund / monthlyExpenses).toFixed(1)} months. Target 3-6 months for security.`,
+        icon: "🛡️",
+        color: "green",
+      });
+    }
+
+    if (creditCardUtilization > 0.3) {
+      nudges.push({
+        id: 3,
+        title: "Optimize Credit Usage",
+        category: "Debt",
+        description: `🎯 Credit card usage at ${(creditCardUtilization * 100).toFixed(0)}%. Keep under 30% for better score.`,
+        icon: "💳",
+        color: "orange",
+      });
+    }
+
+    if (investments < monthlyIncome * 6) {
+      nudges.push({
+        id: 4,
+        title: "Grow Investments",
+        category: "Investments",
+        description: `📈 Investments are ${(investments / monthlyIncome).toFixed(1)}x monthly income. Target 6-12x for growth.`,
+        icon: "📈",
+        color: "green",
+      });
+    }
+
+    if (diningExpense > monthlyIncome * 0.1) {
+      nudges.push({
+        id: 5,
+        title: "Optimize Dining Expenses",
+        category: "Spending",
+        description: `🍔 Dining: ₹${diningExpense.toLocaleString()}/month. Cook 2 more meals/week to save ₹${Math.round(diningExpense * 0.25).toLocaleString()}.`,
+        icon: "🍽️",
+        color: "orange",
+      });
+    }
+
+    if (taxData?.quarterlyTax > 0) {
+      nudges.push({
+        id: 6,
+        title: "Quarterly Tax Payment Due",
+        category: "Tax",
+        description: `📋 Estimated tax: ₹${taxData.quarterlyTax.toLocaleString()}. Pay before 15th Dec to avoid interest.`,
+        icon: "📋",
+        color: "purple",
+      });
+    }
+
+    return nudges;
+  };
+
+  const nudges = (() => {
+    if (financialData) {
+      return generateRuleBasedNudges(financialData);
+    } else {
+      return [
+        {
+          id: 1,
+          title: "Loading personalized insights...",
+          category: "Savings",
+          description: "Analyzing your financial data to provide tailored recommendations.",
+          icon: "⏳",
+          color: "blue",
+        },
+      ];
+    }
+  })();
 
   const filteredNudges =
     activeCategory === "All"

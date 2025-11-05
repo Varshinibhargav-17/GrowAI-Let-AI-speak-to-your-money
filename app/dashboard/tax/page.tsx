@@ -3,18 +3,193 @@
 import { useEffect, useState } from "react";
 import TaxSummaryCard from "@/components/TaxSummaryCard";
 import TaxBreakdownChart from "@/components/TaxBreakdownChart";
+import { FinancialDataGenerator } from "@/lib/data-templates/generators/data-generator";
 
 export default function TaxEstimatorPage() {
   const [taxData, setTaxData] = useState<any>(null);
 
   useEffect(() => {
-    const loadFinancialData = () => {
-      const storedData = localStorage.getItem('financialData');
-      if (storedData) {
-        const financialData = JSON.parse(storedData);
-        const income = financialData.income.monthly * 12; // Annual income
+    const loadFinancialData = async () => {
+      try {
+        // First try to fetch existing financial data from database
+        const profileRes = await fetch('/api/profile');
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          if (profileData.financialData) {
+            const financialData = profileData.financialData;
+            const income = financialData.income.monthly * 12; // Annual income
 
-        // Calculate tax based on Indian tax slabs
+            // Calculate tax based on Indian tax slabs
+            let taxPayable = 0;
+            let slabs = [];
+
+            if (income <= 300000) {
+              slabs = [{ slab: "0 - 3L", rate: 0, tax: 0 }];
+              taxPayable = 0;
+            } else if (income <= 600000) {
+              const taxable = income - 300000;
+              taxPayable = taxable * 0.05;
+              slabs = [
+                { slab: "0 - 3L", rate: 0, tax: 0 },
+                { slab: "3L - 6L", rate: 0.05, tax: taxPayable }
+              ];
+            } else if (income <= 900000) {
+              taxPayable = 15000 + (income - 600000) * 0.1;
+              slabs = [
+                { slab: "0 - 3L", rate: 0, tax: 0 },
+                { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+                { slab: "6L - 9L", rate: 0.10, tax: (income - 600000) * 0.1 }
+              ];
+            } else if (income <= 1200000) {
+              taxPayable = 45000 + (income - 900000) * 0.15;
+              slabs = [
+                { slab: "0 - 3L", rate: 0, tax: 0 },
+                { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+                { slab: "6L - 9L", rate: 0.10, tax: 30000 },
+                { slab: "9L - 12L", rate: 0.15, tax: (income - 900000) * 0.15 }
+              ];
+            } else {
+              taxPayable = 90000 + (income - 1200000) * 0.2;
+              slabs = [
+                { slab: "0 - 3L", rate: 0, tax: 0 },
+                { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+                { slab: "6L - 9L", rate: 0.10, tax: 30000 },
+                { slab: "9L - 12L", rate: 0.15, tax: 45000 },
+                { slab: "12L+", rate: 0.20, tax: (income - 1200000) * 0.2 }
+              ];
+            }
+
+            const taxData = {
+              totalIncome: income,
+              deductibleExpenses: Math.floor(income * 0.1), // Assume 10% deductions
+              taxSlabs: slabs,
+              totalTax: Math.round(taxPayable),
+              quarterlyTax: Math.round(taxPayable / 4),
+            };
+            setTaxData(taxData);
+          } else {
+            // If no stored data, generate new data based on user profile
+            const profileType = profileData?.financialProfileType || 'young_professional';
+            const selectedBanks = profileData?.selectedBanks || ['HDFC', 'ICICI'];
+
+            const generatedData = FinancialDataGenerator.generateFinancialData(profileType, selectedBanks);
+            const income = generatedData.income.monthly * 12;
+
+            // Calculate tax based on Indian tax slabs
+            let taxPayable = 0;
+            let slabs = [];
+
+            if (income <= 300000) {
+              slabs = [{ slab: "0 - 3L", rate: 0, tax: 0 }];
+              taxPayable = 0;
+            } else if (income <= 600000) {
+              const taxable = income - 300000;
+              taxPayable = taxable * 0.05;
+              slabs = [
+                { slab: "0 - 3L", rate: 0, tax: 0 },
+                { slab: "3L - 6L", rate: 0.05, tax: taxPayable }
+              ];
+            } else if (income <= 900000) {
+              taxPayable = 15000 + (income - 600000) * 0.1;
+              slabs = [
+                { slab: "0 - 3L", rate: 0, tax: 0 },
+                { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+                { slab: "6L - 9L", rate: 0.10, tax: (income - 600000) * 0.1 }
+              ];
+            } else if (income <= 1200000) {
+              taxPayable = 45000 + (income - 900000) * 0.15;
+              slabs = [
+                { slab: "0 - 3L", rate: 0, tax: 0 },
+                { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+                { slab: "6L - 9L", rate: 0.10, tax: 30000 },
+                { slab: "9L - 12L", rate: 0.15, tax: (income - 900000) * 0.15 }
+              ];
+            } else {
+              taxPayable = 90000 + (income - 1200000) * 0.2;
+              slabs = [
+                { slab: "0 - 3L", rate: 0, tax: 0 },
+                { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+                { slab: "6L - 9L", rate: 0.10, tax: 30000 },
+                { slab: "9L - 12L", rate: 0.15, tax: 45000 },
+                { slab: "12L+", rate: 0.20, tax: (income - 1200000) * 0.2 }
+              ];
+            }
+
+            const taxData = {
+              totalIncome: income,
+              deductibleExpenses: Math.floor(income * 0.1),
+              taxSlabs: slabs,
+              totalTax: Math.round(taxPayable),
+              quarterlyTax: Math.round(taxPayable / 4),
+            };
+            setTaxData(taxData);
+
+            // Store the generated data in database
+            await fetch('/api/profile', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ financialData: generatedData }),
+            });
+          }
+        } else {
+          // Fallback to default data if profile fetch fails
+          const generatedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
+          const income = generatedData.income.monthly * 12;
+
+          let taxPayable = 0;
+          let slabs = [];
+
+          if (income <= 300000) {
+            slabs = [{ slab: "0 - 3L", rate: 0, tax: 0 }];
+            taxPayable = 0;
+          } else if (income <= 600000) {
+            const taxable = income - 300000;
+            taxPayable = taxable * 0.05;
+            slabs = [
+              { slab: "0 - 3L", rate: 0, tax: 0 },
+              { slab: "3L - 6L", rate: 0.05, tax: taxPayable }
+            ];
+          } else if (income <= 900000) {
+            taxPayable = 15000 + (income - 600000) * 0.1;
+            slabs = [
+              { slab: "0 - 3L", rate: 0, tax: 0 },
+              { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+              { slab: "6L - 9L", rate: 0.10, tax: (income - 600000) * 0.1 }
+            ];
+          } else if (income <= 1200000) {
+            taxPayable = 45000 + (income - 900000) * 0.15;
+            slabs = [
+              { slab: "0 - 3L", rate: 0, tax: 0 },
+              { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+              { slab: "6L - 9L", rate: 0.10, tax: 30000 },
+              { slab: "9L - 12L", rate: 0.15, tax: (income - 900000) * 0.15 }
+            ];
+          } else {
+            taxPayable = 90000 + (income - 1200000) * 0.2;
+            slabs = [
+              { slab: "0 - 3L", rate: 0, tax: 0 },
+              { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+              { slab: "6L - 9L", rate: 0.10, tax: 30000 },
+              { slab: "9L - 12L", rate: 0.15, tax: 45000 },
+              { slab: "12L+", rate: 0.20, tax: (income - 1200000) * 0.2 }
+            ];
+          }
+
+          const taxData = {
+            totalIncome: income,
+            deductibleExpenses: Math.floor(income * 0.1),
+            taxSlabs: slabs,
+            totalTax: Math.round(taxPayable),
+            quarterlyTax: Math.round(taxPayable / 4),
+          };
+          setTaxData(taxData);
+        }
+      } catch (error) {
+        console.error('Error loading financial data:', error);
+        // Fallback to default data
+        const generatedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
+        const income = generatedData.income.monthly * 12;
+
         let taxPayable = 0;
         let slabs = [];
 
@@ -56,27 +231,12 @@ export default function TaxEstimatorPage() {
 
         const taxData = {
           totalIncome: income,
-          deductibleExpenses: Math.floor(income * 0.1), // Assume 10% deductions
+          deductibleExpenses: Math.floor(income * 0.1),
           taxSlabs: slabs,
           totalTax: Math.round(taxPayable),
           quarterlyTax: Math.round(taxPayable / 4),
         };
         setTaxData(taxData);
-      } else {
-        // Fallback to mock data if no stored data
-        const mockData = {
-          totalIncome: 720000,
-          deductibleExpenses: 120000,
-          taxSlabs: [
-            { slab: "0 - 3L", rate: 0, tax: 0 },
-            { slab: "3L - 6L", rate: 0.05, tax: 15000 },
-            { slab: "6L - 9L", rate: 0.10, tax: 30000 },
-            { slab: "9L+", rate: 0.15, tax: 15000 },
-          ],
-          totalTax: 60000,
-          quarterlyTax: 15000,
-        };
-        setTaxData(mockData);
       }
     };
 

@@ -790,17 +790,16 @@ export default function MCPPage() {
               onClick={async () => {
                 const profileRes = await fetch("/api/profile");
                 const profileData = await profileRes.json();
-                const profileType = profileData.financialProfileType;
 
                 const financialData = FinancialDataGenerator.generateFinancialData(
-                  profileType,
+                  profileData,
                   selectedBanks
                 );
 
                 await fetch("/api/profile", {
                   method: "PUT",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ selectedBanks, accountDetails }),
+                  body: JSON.stringify({ selectedBanks, accountDetails, financialData }),
                 });
 
                 localStorage.setItem('financialData', JSON.stringify(financialData));
