@@ -31,6 +31,7 @@ export default function MCPPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.financialProfileType) {
+            setProfile(data.financialProfileType);
             setProfileCompleted(true);
           }
         }
@@ -60,9 +61,11 @@ export default function MCPPage() {
             </div>
 
             <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent mb-4">
-              Tell Us About Yourself
+              {profileCompleted ? `Your Profile: ${profile === 'young' ? 'Young Professional' : profile === 'investor' ? 'Established Investor' : 'Retirement Focused'}` : 'Tell Us About Yourself'}
             </h2>
-            <p className="text-gray-600 mb-10">Choose your financial profile to get personalized insights</p>
+            <p className="text-gray-600 mb-10">
+              {profileCompleted ? 'You can continue to connect your banks or update your profile details.' : 'Choose your financial profile to get personalized insights'}
+            </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[

@@ -5,11 +5,6 @@ const UserSchema = new Schema(
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    firstname: { type: String },
-    lastname: { type: String },
-    phoneNumber: { type: String },
-    address: { type: String },
-    gender: { type: String },
     financialProfileType: { type: String },
     incomePattern: { type: String },
     incomeNotes: { type: String },
@@ -17,6 +12,14 @@ const UserSchema = new Schema(
     financialFocus: { type: Object },
     career: { type: Object },
     selectedBanks: [{ type: String }],
+    financialData: {
+      profile: { type: Object },
+      income: { type: Object },
+      expenses: { type: Object },
+      banks: { type: Object },
+      summary: { type: Object },
+      generated_at: { type: Date }
+    },
   },
   { timestamps: true }
 );

@@ -22,7 +22,7 @@ export default function HomePage() {
         </div>
 
         {/* Enhanced Headline with gradient */}
-        <h1 className="mx-auto max-w-4xl text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight bg-gradient-to-br from-neutral-900 via-neutral-800 to-green-900 bg-clip-text text-transparent animate-slide-up">
+        <h1 className="mx-auto max-w-4xl text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight bg-gradient-to-br from-neutral-900 via-neutral-800 to-green-900 bg-clip-text text-transparent animate-slide-up px-4">
           Take Full Control Of Your Finances With{" "}
           <span className="bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
             GrowAI
@@ -30,13 +30,13 @@ export default function HomePage() {
         </h1>
 
         {/* Enhanced Subheadline */}
-        <p className="mx-auto mt-6 max-w-2xl text-lg md:text-xl text-neutral-600 leading-relaxed animate-fade-in-delay">
-          Smart, secure and scalable financial management built for modern individuals and businesses. 
+        <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg md:text-xl text-neutral-600 leading-relaxed animate-fade-in-delay px-4">
+          Smart, secure and scalable financial management built for modern individuals and businesses.
           Powered by AI, designed for growth.
         </p>
 
         {/* Enhanced CTA with icon */}
-        <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-delay-2">
+        <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-delay-2 px-4">
           <Link
             href="/auth/signup"
             className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-green-600 to-green-700 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-green-600/30 hover:shadow-xl hover:shadow-green-600/40 hover:scale-105 transition-all duration-300"
@@ -56,21 +56,21 @@ export default function HomePage() {
         </div>
 
         {/* Trust indicators */}
-        <div className="mt-16 flex flex-wrap justify-center items-center gap-8 text-sm text-neutral-500 animate-fade-in-delay-3">
+        <div className="mt-12 sm:mt-16 flex flex-wrap justify-center items-center gap-4 sm:gap-8 text-xs sm:text-sm text-neutral-500 animate-fade-in-delay-3 px-4">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
             <span className="font-medium">AI-Powered Insights</span>
           </div>
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
             <span className="font-medium">Bank-Level Security</span>
           </div>
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
             </svg>
             <span className="font-medium">Trusted by 10,000+ Users</span>

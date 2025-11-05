@@ -14,6 +14,7 @@ import { FinancialDataGenerator } from "@/lib/data-templates/generators/data-gen
 
 export default function DashboardPage() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [chatMessages, setChatMessages] = useState<{ sender: string; text: string }[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -51,59 +52,96 @@ export default function DashboardPage() {
 
   // Financial data initialization using FinancialDataGenerator
   useEffect(() => {
-    const loadFinancialData = () => {
-      const generatedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
-      setFinancialData(generatedData);
+    const loadFinancialData = async () => {
+      let generatedData: any = null;
 
-      const income = generatedData.income.monthly * 12;
+      try {
+        // First try to fetch existing financial data from database
+        const profileRes = await fetch('/api/profile');
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          if (profileData.financialData) {
+            setFinancialData(profileData.financialData);
+            generatedData = profileData.financialData;
+          } else {
+            // If no stored data, generate new data based on user profile
+            const profileType = profileData?.financialProfileType || 'young_professional';
+            const selectedBanks = profileData?.selectedBanks || ['HDFC', 'ICICI'];
 
-      let taxPayable = 0;
-      let slabs = [];
+            generatedData = FinancialDataGenerator.generateFinancialData(profileType, selectedBanks);
+            setFinancialData(generatedData);
 
-      if (income <= 300000) {
-        slabs = [{ slab: "0 - 3L", rate: 0, tax: 0 }];
-        taxPayable = 0;
-      } else if (income <= 600000) {
-        const taxable = income - 300000;
-        taxPayable = taxable * 0.05;
-        slabs = [
-          { slab: "0 - 3L", rate: 0, tax: 0 },
-          { slab: "3L - 6L", rate: 0.05, tax: taxPayable }
-        ];
-      } else if (income <= 900000) {
-        taxPayable = 15000 + (income - 600000) * 0.1;
-        slabs = [
-          { slab: "0 - 3L", rate: 0, tax: 0 },
-          { slab: "3L - 6L", rate: 0.05, tax: 15000 },
-          { slab: "6L - 9L", rate: 0.10, tax: (income - 600000) * 0.1 }
-        ];
-      } else if (income <= 1200000) {
-        taxPayable = 45000 + (income - 900000) * 0.15;
-        slabs = [
-          { slab: "0 - 3L", rate: 0, tax: 0 },
-          { slab: "3L - 6L", rate: 0.05, tax: 15000 },
-          { slab: "6L - 9L", rate: 0.10, tax: 30000 },
-          { slab: "9L - 12L", rate: 0.15, tax: (income - 900000) * 0.15 }
-        ];
-      } else {
-        taxPayable = 90000 + (income - 1200000) * 0.2;
-        slabs = [
-          { slab: "0 - 3L", rate: 0, tax: 0 },
-          { slab: "3L - 6L", rate: 0.05, tax: 15000 },
-          { slab: "6L - 9L", rate: 0.10, tax: 30000 },
-          { slab: "9L - 12L", rate: 0.15, tax: 45000 },
-          { slab: "12L+", rate: 0.20, tax: (income - 1200000) * 0.2 }
-        ];
+            // Store the generated data in database
+            await fetch('/api/profile', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ financialData: generatedData }),
+            });
+          }
+        } else {
+          // Fallback to default data if profile fetch fails
+          generatedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
+          setFinancialData(generatedData);
+        }
+      } catch (error) {
+        console.error('Error loading financial data:', error);
+        // Fallback to default data
+        generatedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
+        setFinancialData(generatedData);
       }
 
-      const taxData = {
-        totalIncome: income,
-        deductibleExpenses: Math.floor(income * 0.1),
-        taxSlabs: slabs,
-        totalTax: Math.round(taxPayable),
-        quarterlyTax: Math.round(taxPayable / 4),
-      };
-      setTaxData(taxData);
+      // Calculate tax data using the financial data
+      if (generatedData) {
+        const income = generatedData.income.monthly * 12;
+
+        let taxPayable = 0;
+        let slabs = [];
+
+        if (income <= 300000) {
+          slabs = [{ slab: "0 - 3L", rate: 0, tax: 0 }];
+          taxPayable = 0;
+        } else if (income <= 600000) {
+          const taxable = income - 300000;
+          taxPayable = taxable * 0.05;
+          slabs = [
+            { slab: "0 - 3L", rate: 0, tax: 0 },
+            { slab: "3L - 6L", rate: 0.05, tax: taxPayable }
+          ];
+        } else if (income <= 900000) {
+          taxPayable = 15000 + (income - 600000) * 0.1;
+          slabs = [
+            { slab: "0 - 3L", rate: 0, tax: 0 },
+            { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+            { slab: "6L - 9L", rate: 0.10, tax: (income - 600000) * 0.1 }
+          ];
+        } else if (income <= 1200000) {
+          taxPayable = 45000 + (income - 900000) * 0.15;
+          slabs = [
+            { slab: "0 - 3L", rate: 0, tax: 0 },
+            { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+            { slab: "6L - 9L", rate: 0.10, tax: 30000 },
+            { slab: "9L - 12L", rate: 0.15, tax: (income - 900000) * 0.15 }
+          ];
+        } else {
+          taxPayable = 90000 + (income - 1200000) * 0.2;
+          slabs = [
+            { slab: "0 - 3L", rate: 0, tax: 0 },
+            { slab: "3L - 6L", rate: 0.05, tax: 15000 },
+            { slab: "6L - 9L", rate: 0.10, tax: 30000 },
+            { slab: "9L - 12L", rate: 0.15, tax: 45000 },
+            { slab: "12L+", rate: 0.20, tax: (income - 1200000) * 0.2 }
+          ];
+        }
+
+        const taxData = {
+          totalIncome: income,
+          deductibleExpenses: Math.floor(income * 0.1),
+          taxSlabs: slabs,
+          totalTax: Math.round(taxPayable),
+          quarterlyTax: Math.round(taxPayable / 4),
+        };
+        setTaxData(taxData);
+      }
     };
 
     loadFinancialData();
@@ -177,9 +215,7 @@ export default function DashboardPage() {
   };
 
   const nudges = (() => {
-    const storedData = localStorage.getItem('financialData');
-    if (storedData) {
-      const financialData = JSON.parse(storedData);
+    if (financialData) {
       return generateRuleBasedNudges(financialData);
     } else {
       return [
@@ -210,28 +246,95 @@ export default function DashboardPage() {
       <div className="absolute top-0 right-0 w-96 h-96 bg-green-200/20 rounded-full blur-3xl"></div>
 
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-green-100 py-6 relative z-10">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-green-100 py-4 sm:py-6 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
                 GrowAI Dashboard
               </h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700 font-medium hidden md:block">Welcome back!</span>
+
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <span className="text-gray-700 font-medium hidden sm:block text-sm sm:text-base">Welcome back!</span>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="md:hidden w-8 h-8 flex flex-col justify-center items-center space-y-1 hover:bg-green-50 rounded-lg transition-colors"
+                title="Menu"
+              >
+                <div className={`w-5 h-0.5 bg-green-600 transition-transform ${showMobileMenu ? 'rotate-45 translate-y-1.5' : ''}`}></div>
+                <div className={`w-5 h-0.5 bg-green-600 transition-opacity ${showMobileMenu ? 'opacity-0' : ''}`}></div>
+                <div className={`w-5 h-0.5 bg-green-600 transition-transform ${showMobileMenu ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
+              </button>
+
+              {/* Mobile Menu */}
+              {showMobileMenu && (
+                <div className="md:hidden absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border-2 border-green-100 py-2 z-10 animate-fade-in">
+                  <div className="px-4 py-3 border-b border-green-100">
+                    <p className="text-sm font-semibold text-gray-900">{session?.user?.email}</p>
+                    <p className="text-xs text-green-600">Premium Member</p>
+                  </div>
+                  <div className="py-2">
+                    <button
+                      onClick={() => {
+                        setShowMobileMenu(false);
+                        router.push('/dashboard');
+                      }}
+                      className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 transition-colors font-medium"
+                    >
+                      <TrendingUp className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMobileMenu(false);
+                        // Add profile navigation if needed
+                      }}
+                      className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 transition-colors font-medium"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMobileMenu(false);
+                        // Add settings navigation if needed
+                      }}
+                      className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 transition-colors font-medium"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
+                    </button>
+                  </div>
+                  <div className="border-t border-green-100 pt-2">
+                    <button
+                      onClick={() => {
+                        setShowMobileMenu(false);
+                        signOut();
+                      }}
+                      className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="relative">
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center hover:shadow-lg transition-all hover:scale-105"
+                  className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center hover:shadow-lg transition-all hover:scale-105"
                   title="Profile"
                 >
-                  <User className="w-5 h-5 text-white" />
+                  <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </button>
                 {showProfileMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border-2 border-green-100 py-2 z-10 animate-fade-in">
+                  <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-xl border-2 border-green-100 py-2 z-10 animate-fade-in">
                     <div className="px-4 py-3 border-b border-green-100">
-                      <p className="text-sm font-semibold text-gray-900">{session?.user?.email}</p>
+                      <p className="text-xs sm:text-sm font-semibold text-gray-900">{session?.user?.email}</p>
                       <p className="text-xs text-green-600">Premium Member</p>
                     </div>
                     <button
@@ -250,12 +353,12 @@ export default function DashboardPage() {
       </header>
 
       {/* Overview Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-        <div className="mb-8 animate-fade-in">
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent mb-2">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
+        <div className="mb-6 sm:mb-8 animate-fade-in">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent mb-2">
             Financial Overview
           </h2>
-          <p className="text-gray-600">Your complete financial snapshot at a glance</p>
+          <p className="text-gray-600 text-sm sm:text-base">Your complete financial snapshot at a glance</p>
         </div>
 
         <div className="space-y-8">
