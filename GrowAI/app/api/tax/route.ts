@@ -26,7 +26,8 @@ export async function POST(req: Request) {
       taxPayable: Math.round(taxPayable),
       effectiveRate,
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

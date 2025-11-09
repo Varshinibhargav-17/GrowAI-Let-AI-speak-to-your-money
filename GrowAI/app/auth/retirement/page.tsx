@@ -75,8 +75,9 @@ export default function RetirementProfilePage() {
 
       setSuccess("Profile saved successfully!");
       setTimeout(() => router.push("/auth/mcp"), 1000);
-    } catch (err: any) {
-      setError(err.message || "Error saving profile");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Error saving profile";
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }

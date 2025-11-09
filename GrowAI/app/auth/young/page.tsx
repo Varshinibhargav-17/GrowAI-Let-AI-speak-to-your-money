@@ -94,9 +94,10 @@ export default function YoungProfessionalPage() {
       setTimeout(() => {
         router.push("/auth/mcp");
       }, 900);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Save error:", err);
-      setError(err?.message || "Error saving profile");
+      const errorMessage = err instanceof Error ? err.message : "Error saving profile";
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }

@@ -5,7 +5,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: Request) {
-  let financialData: any = null;
+  let financialData: Record<string, unknown> = {};
   try {
     const body = await request.json();
     const { message } = body;
@@ -22,24 +22,29 @@ export async function POST(request: Request) {
       }
     });
 
+    // Type-safe access to financial data
+    const income = financialData.income as number;
+    const expenses = financialData.expenses as number;
+    const investments = financialData.investments as number;
+
     // Create detailed prompt
     const prompt = `
     ROLE: You are GrowAI, an AI financial advisor. Provide specific, personalized financial advice.
 
     USER FINANCIAL DATA:
-    - Monthly Income: ₹${financialData.income}
-    - Monthly Expenses: ₹${financialData.expenses}
-    - Monthly Savings: ₹${financialData.income - financialData.expenses}
-    - Savings Rate: ${(((financialData.income - financialData.expenses) / financialData.income) * 100).toFixed(1)}%
-    - Investments: ₹${financialData.investments || 0}
-    ${financialData.debts ? `- Debts: ${Object.entries(financialData.debts).map(([key, value]: [string, any]) => `${key}: ₹${value.principal}`).join(', ')}` : ''}
+    - Monthly Income: ₹${income}
+    - Monthly Expenses: ₹${expenses}
+    - Monthly Savings: ₹${income - expenses}
+    - Savings Rate: ${(((income - expenses) / income) * 100).toFixed(1)}%
+    - Investments: ₹${investments || 0}
+    ${financialData.debts ? `- Debts: ${Object.entries(financialData.debts as Record<string, { principal: number }>).map(([key, value]) => `${key}: ₹${value.principal}`).join(', ')}` : ''}
 
     USER QUESTION: ${message}
 
     INSTRUCTIONS:
     1. Analyze their EXACT numbers
     2. Provide SPECIFIC, actionable advice
-    3. Use their actual amounts (₹${financialData.income}, ₹${financialData.expenses}, etc.)
+    3. Use their actual amounts (₹${income}, ₹${expenses}, etc.)
     4. Be practical and helpful
     5. Keep response under 400 tokens
     6. Use bullet points or numbered lists if helpful
@@ -61,18 +66,20 @@ export async function POST(request: Request) {
       response: text
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Gemini API Error:', error);
-    
+
     // Detailed error handling
     let errorMessage = 'Failed to get AI response';
-    
-    if (error.message?.includes('API_KEY_INVALID')) {
-      errorMessage = 'Invalid API key. Please check your Gemini API key.';
-    } else if (error.message?.includes('quota')) {
-      errorMessage = 'API quota exceeded. Please check your usage limits.';
-    } else if (error.message?.includes('network')) {
-      errorMessage = 'Network error. Please check your internet connection.';
+
+    if (error instanceof Error) {
+      if (error.message?.includes('API_KEY_INVALID')) {
+        errorMessage = 'Invalid API key. Please check your Gemini API key.';
+      } else if (error.message?.includes('quota')) {
+        errorMessage = 'API quota exceeded. Please check your usage limits.';
+      } else if (error.message?.includes('network')) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      }
     }
 
     return NextResponse.json({
