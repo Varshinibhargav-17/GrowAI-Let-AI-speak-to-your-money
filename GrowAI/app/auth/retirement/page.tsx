@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TreeDeciduous, TrendingUp, Target, Shield, ArrowLeft, Briefcase } from "lucide-react";
+import { TreeDeciduous, TrendingUp, Target, Shield, ArrowLeft } from "lucide-react";
 
 type FormState = {
   incomePattern: string;
@@ -75,8 +75,8 @@ export default function RetirementProfilePage() {
 
       setSuccess("Profile saved successfully!");
       setTimeout(() => router.push("/auth/mcp"), 1000);
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Error saving profile";
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Error saving profile";
       setError(errorMessage);
     } finally {
       setSaving(false);
@@ -230,7 +230,7 @@ export default function RetirementProfilePage() {
               </svg>
               <div>
                 <p className="text-sm font-semibold text-blue-900">Note</p>
-                <p className="text-sm text-blue-700">Based on your selection, we'll generate a realistic financial profile for AI analysis.</p>
+                <p className="text-sm text-blue-700">Based on your selection, we&apos;ll generate a realistic financial profile for AI analysis.</p>
               </div>
             </div>
 

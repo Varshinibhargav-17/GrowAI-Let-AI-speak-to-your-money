@@ -26,7 +26,7 @@ export default function ChatbotPage() {
       const data = await res.json();
       const botReply = data.reply || "No response.";
       setMessages([...newMessages, { sender: "bot", text: botReply }]);
-    } catch (err) {
+    } catch (_error) {
       setMessages([...newMessages, { sender: "bot", text: "Error connecting to GrowAI." }]);
     } finally {
       setLoading(false);

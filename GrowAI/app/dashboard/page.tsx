@@ -1,16 +1,50 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Calculator, MessageCircle, User, Lightbulb, LogOut, RefreshCcw, Mail, Calendar, Settings, TrendingUp, DollarSign, PiggyBank } from "lucide-react";
+import { Calculator, MessageCircle, User, Lightbulb, LogOut, RefreshCcw, Settings, TrendingUp, DollarSign, PiggyBank } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import CashflowChart from "@/components/CashflowChart";
 import ExpenseChart from "@/components/ExpenseChart";
 import DashboardCard from "@/components/DashboardCard";
-import TaxSummaryCard from "@/components/TaxSummaryCard";
+
 import TaxBreakdownChart from "@/components/TaxBreakdownChart";
 import NudgeCard from "@/components/NudgeCard";
 import NudgeCategoryTabs from "@/components/NudgeCategoryTabs";
 import { FinancialDataGenerator } from "@/lib/data-templates/generators/data-generator";
+
+interface TaxSlab {
+  slab: string;
+  rate: number;
+  tax: number;
+}
+
+interface TaxData {
+  totalIncome: number;
+  deductibleExpenses: number;
+  taxSlabs: TaxSlab[];
+  totalTax: number;
+  quarterlyTax: number;
+}
+
+interface FinancialData {
+  income: {
+    monthly: number;
+  };
+  expenses: {
+    [key: string]: number;
+  };
+  investments: {
+    total: number;
+  };
+  debt: {
+    creditCard?: {
+      utilization: number;
+    };
+  };
+  savings: {
+    emergency: number;
+  };
+}
 
 export default function DashboardPage() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -18,9 +52,9 @@ export default function DashboardPage() {
   const [chatMessages, setChatMessages] = useState<{ sender: string; text: string }[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
-  const [taxData, setTaxData] = useState<any>(null);
+  const [taxData, setTaxData] = useState<TaxData | null>(null);
   const [activeNudgeCategory, setActiveNudgeCategory] = useState("All");
-  const [financialData, setFinancialData] = useState<any>(null);
+  const [financialData, setFinancialData] = useState<FinancialData | null>(null);
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -37,7 +71,7 @@ export default function DashboardPage() {
       // Flatten financial data for Gemini API
       const flattenedFinancialData = financialData ? {
         income: financialData.income?.monthly || 0,
-        expenses: Object.values(financialData.expenses || {}).reduce((sum: number, val: any) => sum + (typeof val === 'number' ? val : 0), 0),
+        expenses: Object.values(financialData.expenses || {}).reduce((sum: number, val: number) => sum + val, 0),
         investments: financialData.investments?.total || 0,
         debts: financialData.debt || {}
       } : null;
@@ -51,7 +85,7 @@ export default function DashboardPage() {
       const data = await res.json();
       const botReply = data.response || data.reply || "No response.";
       setChatMessages([...newMessages, { sender: "bot", text: botReply }]);
-    } catch (err) {
+    } catch (_err) {
       setChatMessages([...newMessages, { sender: "bot", text: "Error connecting to GrowAI." }]);
     } finally {
       setChatLoading(false);
@@ -61,7 +95,8 @@ export default function DashboardPage() {
   // Financial data initialization using FinancialDataGenerator
   useEffect(() => {
     const loadFinancialData = async () => {
-      let generatedData: any = null;
+      let rawGeneratedData: any = null;
+      let transformedData: FinancialData | null = null;
 
       try {
         // First try to fetch existing financial data from database
@@ -70,37 +105,101 @@ export default function DashboardPage() {
           const profileData = await profileRes.json();
           if (profileData.financialData) {
             setFinancialData(profileData.financialData);
-            generatedData = profileData.financialData;
+            transformedData = profileData.financialData;
           } else {
             // If no stored data, generate new data based on user profile
             const profileType = profileData?.financialProfileType || 'young_professional';
             const selectedBanks = profileData?.selectedBanks || ['HDFC', 'ICICI'];
 
-            generatedData = FinancialDataGenerator.generateFinancialData(profileType, selectedBanks);
-            setFinancialData(generatedData);
+            rawGeneratedData = FinancialDataGenerator.generateFinancialData(profileType, selectedBanks);
+            // Transform generated data to match FinancialData interface
+            transformedData = {
+              income: {
+                monthly: rawGeneratedData.income.monthly
+              },
+              expenses: rawGeneratedData.expenses,
+              investments: {
+                total: Object.values(rawGeneratedData.banks).reduce((sum: number, bank: any) =>
+                  sum + (bank.investments?.mutual_funds || 0) +
+                  (bank.investments?.stocks || 0) +
+                  (bank.investments?.fixed_deposits || 0), 0)
+              },
+              debt: {
+                creditCard: {
+                  utilization: Object.values(rawGeneratedData.banks).reduce((max: number, bank: any) =>
+                    Math.max(max, bank.credit_card?.utilization_rate || 0), 0) / 100
+                }
+              },
+              savings: {
+                emergency: rawGeneratedData.summary.monthly_savings * 3 // Approximate emergency fund
+              }
+            };
+            setFinancialData(transformedData);
 
-            // Store the generated data in database
+            // Store the transformed data in database
             await fetch('/api/profile', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ financialData: generatedData }),
+              body: JSON.stringify({ financialData: transformedData }),
             });
           }
         } else {
           // Fallback to default data if profile fetch fails
-          generatedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
-          setFinancialData(generatedData);
+          rawGeneratedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
+          transformedData = {
+            income: {
+              monthly: rawGeneratedData.income.monthly
+            },
+            expenses: rawGeneratedData.expenses,
+            investments: {
+              total: Object.values(rawGeneratedData.banks).reduce((sum: number, bank: any) =>
+                sum + (bank.investments?.mutual_funds || 0) +
+                (bank.investments?.stocks || 0) +
+                (bank.investments?.fixed_deposits || 0), 0)
+            },
+            debt: {
+              creditCard: {
+                utilization: Object.values(rawGeneratedData.banks).reduce((max: number, bank: any) =>
+                  Math.max(max, bank.credit_card?.utilization_rate || 0), 0) / 100
+              }
+            },
+            savings: {
+              emergency: rawGeneratedData.summary.monthly_savings * 3
+            }
+          };
+          setFinancialData(transformedData);
         }
       } catch (error) {
         console.error('Error loading financial data:', error);
         // Fallback to default data
-        generatedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
-        setFinancialData(generatedData);
+        rawGeneratedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
+        transformedData = {
+          income: {
+            monthly: rawGeneratedData.income.monthly
+          },
+          expenses: rawGeneratedData.expenses,
+          investments: {
+            total: Object.values(rawGeneratedData.banks).reduce((sum: number, bank: any) =>
+              sum + (bank.investments?.mutual_funds || 0) +
+              (bank.investments?.stocks || 0) +
+              (bank.investments?.fixed_deposits || 0), 0)
+          },
+          debt: {
+            creditCard: {
+              utilization: Object.values(rawGeneratedData.banks).reduce((max: number, bank: any) =>
+                Math.max(max, bank.credit_card?.utilization_rate || 0), 0) / 100
+            }
+          },
+          savings: {
+            emergency: rawGeneratedData.summary.monthly_savings * 3
+          }
+        };
+        setFinancialData(transformedData);
       }
 
-      // Calculate tax data using the financial data
-      if (generatedData) {
-        const income = generatedData.income.monthly * 12;
+      // Calculate tax data using the transformed financial data
+      if (transformedData) {
+        const income = transformedData.income.monthly * 12;
 
         let taxPayable = 0;
         let slabs = [];
@@ -210,7 +309,7 @@ export default function DashboardPage() {
       });
     }
 
-    if (taxData?.quarterlyTax > 0) {
+    if (taxData && taxData.quarterlyTax > 0) {
       nudges.push({
         id: 6,
         title: "Quarterly Tax Payment Due",

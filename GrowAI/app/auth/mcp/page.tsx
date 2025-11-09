@@ -6,21 +6,20 @@ import { useRouter } from "next/navigation";
 import { CheckCircle, Shield, Briefcase, TreeDeciduous, User, Building2, Check } from "lucide-react";
 import { FinancialDataGenerator } from "@/lib/data-templates/generators/data-generator";
 
+interface AccountDetails {
+  savings: { balance: string; interest: string; use: string; description: string };
+  salary: { balance: string; transactions: string; description: string };
+  creditCard: { limit: string; balance: string; use: string; description: string };
+  loan: { type: string; amount: string; emi: string; tenure: string; description: string };
+  investment: { mutualFunds: string; stocks: string; fixedDeposits: string; description: string };
+}
+
 export default function MCPPage() {
   const [step, setStep] = useState(1);
   const [profile, setProfile] = useState<string | null>(null);
   const [profileCompleted, setProfileCompleted] = useState(false);
   const [selectedBanks, setSelectedBanks] = useState<string[]>([]);
-  const [connecting, setConnecting] = useState(false);
-  const [accountDetails, setAccountDetails] = useState<{ [bank: string]: any }>({});
-
-  const defaultBank = {
-    savings: { balance: "", interest: "", use: "", description: "" },
-    salary: { balance: "", transactions: "", description: "" },
-    creditCard: { limit: "", balance: "", use: "", description: "" },
-    loan: { type: "", amount: "", emi: "", tenure: "", description: "" },
-    investment: { mutualFunds: "", stocks: "", fixedDeposits: "", description: "" }
-  };
+  const [accountDetails, setAccountDetails] = useState<{ [bank: string]: AccountDetails }>({});
 
   const router = useRouter();
 
@@ -132,7 +131,7 @@ export default function MCPPage() {
               Secure Connection
             </h2>
             <p className="text-gray-700 mb-3 max-w-2xl mx-auto">
-              We'll simulate connecting to your financial institutions using bank-level security protocols.
+              We&apos;ll simulate connecting to your financial institutions using bank-level security protocols.
             </p>
             <p className="text-gray-500 text-sm mb-8 max-w-xl mx-auto">
               This is a demonstration of how GrowAI would securely connect to your real accounts.

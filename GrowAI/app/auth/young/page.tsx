@@ -94,9 +94,9 @@ export default function YoungProfessionalPage() {
       setTimeout(() => {
         router.push("/auth/mcp");
       }, 900);
-    } catch (err: unknown) {
-      console.error("Save error:", err);
-      const errorMessage = err instanceof Error ? err.message : "Error saving profile";
+    } catch (error: unknown) {
+      console.error("Save error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Error saving profile";
       setError(errorMessage);
     } finally {
       setSaving(false);
@@ -272,7 +272,7 @@ export default function YoungProfessionalPage() {
               </svg>
               <div>
                 <p className="text-sm font-semibold text-blue-900">Note</p>
-                <p className="text-sm text-blue-700">Based on your selection, we'll generate a realistic financial profile for AI analysis.</p>
+                <p className="text-sm text-blue-700">Based on your selection, we&apos;ll generate a realistic financial profile for AI analysis.</p>
               </div>
             </div>
 

@@ -2,6 +2,7 @@ import { youngProfessionalTemplate } from '../profiles/young-professional';
 import { establishedInvestorTemplate } from '../profiles/established-investor';
 import { retirementFocusedTemplate } from '../profiles/retirement-focused';
 import { bankAccountTemplates } from '../banks/bank-templates';
+import { User, ProfileTemplate, IncomeData, ExpensesData, BankAccount, Loan, FinancialData, SavingsAccountDetails, SalaryAccountDetails, CreditCardDetails, InvestmentDetails } from '../../types';
 
 export class FinancialDataGenerator {
   // 1. Generate random number within range
@@ -10,7 +11,7 @@ export class FinancialDataGenerator {
   }
 
   // 2. Generate user-specific income data
-  static generateIncome(user: any, profileTemplate: any) {
+  static generateIncome(user: User, profileTemplate: ProfileTemplate): IncomeData {
     let baseIncome = 0;
 
     // Use user's incomePattern if available, otherwise fall back to template
@@ -43,7 +44,7 @@ export class FinancialDataGenerator {
   }
 
   // 3. Generate expense breakdown
-  static generateExpenses(profileTemplate: any, income: number) {
+  static generateExpenses(profileTemplate: ProfileTemplate, income: number): ExpensesData {
     const expenses: { [key: string]: number } = {};
 
     Object.keys(profileTemplate.expenses).forEach(category => {
@@ -55,8 +56,8 @@ export class FinancialDataGenerator {
   }
 
   // 4. Generate bank accounts based on user selection and details
-  static generateBankAccounts(user: any, selectedBanks: string[], profileType: string, profileTemplate: any) {
-    const banks: { [key: string]: any } = {};
+  static generateBankAccounts(user: User, selectedBanks: string[], profileType: string, profileTemplate: ProfileTemplate): { [key: string]: BankAccount } {
+    const banks: { [key: string]: BankAccount } = {};
 
     selectedBanks.forEach(bankName => {
       const userBankDetails = user.accountDetails?.[bankName] || {};
@@ -75,7 +76,7 @@ export class FinancialDataGenerator {
   }
 
   // Generate savings account based on user details
-  static generateSavingsAccount(userSavings: any, profileTemplate: any) {
+  static generateSavingsAccount(userSavings: SavingsAccountDetails | undefined, profileTemplate: ProfileTemplate) {
     if (userSavings?.balance) {
       // Parse balance range and pick a value
       const balanceRange = userSavings.balance.split('-').map((s: string) => parseInt(s.replace(/,/g, '')));
@@ -99,7 +100,7 @@ export class FinancialDataGenerator {
   }
 
   // Generate salary account based on user details
-  static generateSalaryAccount(userSalary: any, profileTemplate: any) {
+  static generateSalaryAccount(userSalary: SalaryAccountDetails | undefined, profileTemplate: ProfileTemplate) {
     if (userSalary?.balance) {
       const balanceRange = userSalary.balance.split('-').map((s: string) => parseInt(s.replace(/,/g, '')));
       const balance = balanceRange.length === 2 ? this.randomInRange(balanceRange[0], balanceRange[1]) : parseInt(userSalary.balance.replace(/,/g, ''));
@@ -119,7 +120,7 @@ export class FinancialDataGenerator {
   }
 
   // Generate credit card based on user details
-  static generateCreditCard(userCreditCard: any, profileTemplate: any) {
+  static generateCreditCard(userCreditCard: CreditCardDetails | undefined, profileTemplate: ProfileTemplate) {
     if (userCreditCard?.limit) {
       const limitRange = userCreditCard.limit.split('-').map((s: string) => parseInt(s.replace(/,/g, '')));
       const limit = limitRange.length === 2 ? this.randomInRange(limitRange[0], limitRange[1]) : parseInt(userCreditCard.limit.replace(/,/g, ''));
@@ -155,8 +156,8 @@ export class FinancialDataGenerator {
   }
 
   // 5. Generate appropriate loans based on user data or profile
-  static generateLoans(user: any, profileTemplate: any) {
-    const loans: { [key: string]: any } = {};
+  static generateLoans(user: User, profileTemplate: ProfileTemplate): { [key: string]: Loan } {
+    const loans: { [key: string]: Loan } = {};
 
     // Check user debt information first
     if (user.debt && user.debt.type && user.debt.type !== 'No Outstanding Loan') {
@@ -197,7 +198,7 @@ export class FinancialDataGenerator {
   }
 
   // 5.5. Generate investments based on user data or profile
-  static generateInvestments(userInvestment: any, profileTemplate: any) {
+  static generateInvestments(userInvestment: InvestmentDetails | undefined, profileTemplate: ProfileTemplate): { [key: string]: number } {
     const investments: { [key: string]: number } = {};
 
     if (userInvestment) {
@@ -211,10 +212,10 @@ export class FinancialDataGenerator {
       if (userInvestment.fixedDeposits && userInvestment.fixedDeposits !== '') {
         investments.fixed_deposits = this.parseAmountRange(userInvestment.fixedDeposits);
       }
-    } else if (profileTemplate.investments) {
+    } else if (profileTemplate.investments && Object.keys(profileTemplate.investments).length > 0) {
       // Fallback to profile template
       Object.keys(profileTemplate.investments).forEach(type => {
-        const range = profileTemplate.investments[type].range;
+        const range = profileTemplate.investments![type].range;
         investments[type] = this.randomInRange(range[0], range[1]);
       });
     }
@@ -249,7 +250,7 @@ export class FinancialDataGenerator {
   }
 
   // 6. Main function to generate complete financial data
-  static generateFinancialData(user: any, selectedBanks: string[]) {
+  static generateFinancialData(user: User, selectedBanks: string[]): FinancialData {
     const profileType = user.financialProfileType || 'young_professional';
     const profileTemplate = this.getProfileTemplate(profileType);
 
@@ -278,28 +279,28 @@ export class FinancialDataGenerator {
   }
 
   // 7. Helper to get profile template
-  static getProfileTemplate(profileType: string) {
+  static getProfileTemplate(profileType: string): ProfileTemplate {
     const templates: { [key: string]: any } = {
       'young_professional': youngProfessionalTemplate,
       'established_investor': establishedInvestorTemplate,
       'retirement_focused': retirementFocusedTemplate
     };
-    return templates[profileType];
+    return templates[profileType] as ProfileTemplate;
   }
 
   // 8. Calculate net worth from all accounts
-  static calculateNetWorth(banks: any, profileTemplate: any) {
+  static calculateNetWorth(banks: { [key: string]: BankAccount }, profileTemplate: ProfileTemplate): number {
     let totalAssets = 0;
     let totalLiabilities = 0;
 
-    Object.values(banks).forEach((bank: any) => {
+    Object.values(banks).forEach((bank: BankAccount) => {
       totalAssets += bank.savings_account.balance + bank.salary_account.balance;
       totalAssets += bank.investments?.mutual_funds || 0;
       totalAssets += bank.investments?.stocks || 0;
       totalAssets += bank.investments?.fixed_deposits || 0;
 
       totalLiabilities += bank.credit_card.current_balance;
-      totalLiabilities += Object.values(bank.loans || {}).reduce((sum: number, loan: any) => sum + (loan.principal || 0), 0);
+      totalLiabilities += Object.values(bank.loans || {}).reduce((sum: number, loan: Loan) => sum + (loan.principal || 0), 0);
     });
 
     return totalAssets - totalLiabilities;

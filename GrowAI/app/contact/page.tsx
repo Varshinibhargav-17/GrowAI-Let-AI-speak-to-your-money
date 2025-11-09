@@ -21,8 +21,8 @@ export default function Contact() {
             Contact Us
           </h1>
           <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
-            We'd love to hear from you. Whether you have questions, feedback, or partnership opportunities,
-            reach out to the GrowAI team and we'll get back to you soon.
+            We&apos;d love to hear from you. Whether you have questions, feedback, or partnership opportunities,
+            reach out to the GrowAI team and we&apos;ll get back to you soon.
           </p>
         </section>
 
