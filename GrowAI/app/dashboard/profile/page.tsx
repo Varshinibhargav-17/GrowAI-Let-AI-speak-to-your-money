@@ -220,6 +220,21 @@ export default function ProfilePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
+
+                <button className="flex items-center justify-between w-full px-5 py-4 text-left bg-gray-50 hover:bg-green-50 rounded-xl transition-all group border border-transparent hover:border-green-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Shield className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">Privacy & Security</p>
+                      <p className="text-xs text-gray-500">Control your data and privacy</p>
+                    </div>
+                  </div>
+                  <svg className="w-5 h-5 text-gray-400 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -234,7 +249,7 @@ export default function ProfilePage() {
                   Active
                 </span>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                   <p className="text-green-100 text-sm mb-1">AI Insights</p>
@@ -255,19 +270,4 @@ export default function ProfilePage() {
       </div>
     </main>
   );
-}Box="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-
-                <button className="flex items-center justify-between w-full px-5 py-4 text-left bg-gray-50 hover:bg-green-50 rounded-xl transition-all group border border-transparent hover:border-green-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Shield className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">Privacy & Security</p>
-                      <p className="text-xs text-gray-500">Control your data and privacy</p>
-                    </div>
-                  </div>
-                  <svg className="w-5 h-5 text-gray-400 group-hover:text-green-600" fill="none" stroke="currentColor" view
+}
