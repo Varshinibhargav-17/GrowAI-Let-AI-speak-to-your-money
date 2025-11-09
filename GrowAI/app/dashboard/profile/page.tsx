@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { User, Mail, Calendar, Settings, Shield, Bell, CreditCard, LogOut } from "lucide-react";
+import { User, Mail, Calendar, Settings, Shield, Bell, CreditCard, LogOut, ArrowLeft, ChevronRight } from "lucide-react";
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -49,9 +49,7 @@ export default function ProfilePage() {
               onClick={() => router.push("/dashboard")}
               className="flex items-center gap-2 text-gray-600 hover:text-green-700 font-medium transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
+              <ArrowLeft className="w-5 h-5" />
               Back to Dashboard
             </button>
           </div>
@@ -171,9 +169,7 @@ export default function ProfilePage() {
                       <p className="text-xs text-gray-500">Manage your account details</p>
                     </div>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-green-600" />
                 </button>
 
                 <button className="flex items-center justify-between w-full px-5 py-4 text-left bg-gray-50 hover:bg-green-50 rounded-xl transition-all group border border-transparent hover:border-green-200">
@@ -186,9 +182,7 @@ export default function ProfilePage() {
                       <p className="text-xs text-gray-500">Manage notification preferences</p>
                     </div>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-green-600" />
                 </button>
 
                 <button className="flex items-center justify-between w-full px-5 py-4 text-left bg-gray-50 hover:bg-green-50 rounded-xl transition-all group border border-transparent hover:border-green-200">
@@ -201,9 +195,7 @@ export default function ProfilePage() {
                       <p className="text-xs text-gray-500">Subscription and payment details</p>
                     </div>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-green-600" />
                 </button>
 
                 <button className="flex items-center justify-between w-full px-5 py-4 text-left bg-red-50 hover:bg-red-100 rounded-xl transition-all group border border-transparent hover:border-red-200">
@@ -216,9 +208,7 @@ export default function ProfilePage() {
                       <p className="text-xs text-red-600">Log out of your account</p>
                     </div>
                   </div>
-                  <svg className="w-5 h-5 text-red-400 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  <ChevronRight className="w-5 h-5 text-red-400 group-hover:text-red-600" />
                 </button>
 
                 <button className="flex items-center justify-between w-full px-5 py-4 text-left bg-gray-50 hover:bg-green-50 rounded-xl transition-all group border border-transparent hover:border-green-200">
@@ -231,9 +221,7 @@ export default function ProfilePage() {
                       <p className="text-xs text-gray-500">Control your data and privacy</p>
                     </div>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-green-600" />
                 </button>
               </div>
             </div>
