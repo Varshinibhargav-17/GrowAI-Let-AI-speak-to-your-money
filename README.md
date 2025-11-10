@@ -3,7 +3,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.2-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-8.18.0-green)](https://www.mongodb.com/)
-[![Gemini AI](https://img.shields.io/badge/Gemini_AI-2.0--flash--exp-orange)](https://ai.google.dev/)
+[![Gemini AI](https://img.shields.io/badge/Gemini_AI-2.0--flash--lite-orange)](https://ai.google.dev/)
 
 A comprehensive AI-powered financial management platform that provides personalized financial insights, tax planning, and intelligent nudges based on user profiles and bank account data.
 
@@ -16,10 +16,12 @@ A comprehensive AI-powered financial management platform that provides personali
 - **Real-time Dashboard**: Comprehensive financial overview with interactive charts and metrics
 
 ### AI-Powered Features
-- **Intelligent Chat Assistant**: Conversational AI using Google Gemini for personalized financial advice
+- **Intelligent Chat Assistant**: Conversational AI using Google Gemini 2.0 Flash-Lite for personalized financial advice
 - **Smart Nudges**: Rule-based and AI-generated recommendations for financial optimization
 - **Tax Planning**: Automated tax estimation based on Indian tax slabs with quarterly payment tracking
 - **Expense Analysis**: Detailed breakdown of spending patterns with actionable insights
+
+> **Note**: The application uses Gemini 2.0 Flash-Lite (free tier) which has rate limits and response length restrictions. For enhanced functionality, consider upgrading to a paid Gemini model for better performance and higher limits.
 
 ### Security & Privacy
 - **Secure Authentication**: NextAuth.js integration with multiple providers
