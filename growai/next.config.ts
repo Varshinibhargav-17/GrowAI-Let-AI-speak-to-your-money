@@ -1,17 +1,7 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,
-
-  eslint: {
-    // ✅ Skip ESLint checks during builds (fixes deployment failures)
-    ignoreDuringBuilds: true,
-  },
-
-  typescript: {
-    // ✅ Skip type checking during builds (fixes TS "any" errors)
-    ignoreBuildErrors: true,
-  },
+  // No need for eslint config here since you have .eslintrc.json
 };
 
 export default nextConfig;
