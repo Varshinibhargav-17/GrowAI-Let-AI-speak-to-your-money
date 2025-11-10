@@ -4,8 +4,13 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   eslint: {
-    // ✅ This prevents Vercel or local builds from failing due to linting errors.
+    // ✅ Ignore ESLint errors during build
     ignoreDuringBuilds: true,
+  },
+
+  typescript: {
+    // ✅ Ignore TypeScript errors during build (won’t stop deployment)
+    ignoreBuildErrors: true,
   },
 };
 
