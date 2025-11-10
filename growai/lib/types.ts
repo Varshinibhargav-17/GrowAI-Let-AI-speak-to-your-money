@@ -70,12 +70,35 @@ export interface ProfileTemplate {
     seasonal_pattern?: { high_months: number[]; low_months: number[]; stable_months?: string };
     growth_rate?: number;
   };
-  expenses: { [key: string]: any };
-  investments?: { [key: string]: any };
-  debts?: any;
-  assets?: any;
-  financial_goals?: any;
-  retirement_planning?: any;
+  expenses: { [key: string]: { range: number[]; category?: string; variability?: string } };
+  investments?: { [key: string]: { range: number[]; monthly_contribution?: number[]; allocation?: number[]; sip_range?: number[]; types?: string[]; dividend_income?: number[] } };
+  debts?: { [key: string]: { principal_range?: number[]; interest_rate?: number | number[]; remaining_years?: number[]; emi_range?: number[]; total_limit?: number[]; utilization_rate?: number[]; payment_behavior?: string } };
+  assets?: { [key: string]: { range: number[]; rental_income?: number[]; properties?: number[] } };
+  financial_goals?: { short_term?: string[]; medium_term?: string[]; long_term?: string[] };
+  retirement_planning?: { target_retirement_age?: number[]; required_monthly_income?: number[]; corpus_adequacy?: number[]; succession_planning?: string[] };
+}
+
+export interface BankData {
+  savings_account: {
+    balance: number;
+    interest_rate: number;
+    use: string;
+    description: string;
+  };
+  salary_account: {
+    balance: number;
+    transactions: number;
+    description: string;
+  };
+  credit_card: {
+    limit: number;
+    current_balance: number;
+    utilization_rate: number;
+    use: string;
+    description: string;
+  };
+  loans: { [key: string]: Loan };
+  investments: { [key: string]: number };
 }
 
 export interface IncomeData {

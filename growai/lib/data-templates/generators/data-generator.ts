@@ -169,7 +169,7 @@ export class FinancialDataGenerator {
         type: user.debt.type,
         description: `${user.debt.type} for user`
       };
-    } else if (profileTemplate.debts && profileTemplate.debts.education_loan) {
+    } else if (profileTemplate.debts && profileTemplate.debts.education_loan && profileTemplate.debts.education_loan.principal_range && profileTemplate.debts.education_loan.remaining_years) {
       // Fallback to profile template
       loans.education_loan = {
         principal: this.randomInRange(profileTemplate.debts.education_loan.principal_range[0], profileTemplate.debts.education_loan.principal_range[1]),
