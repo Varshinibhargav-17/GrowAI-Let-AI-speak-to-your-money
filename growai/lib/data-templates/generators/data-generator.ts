@@ -35,37 +35,52 @@ export class FinancialDataGenerator {
       sources: profileTemplate.income.sources,
       variability: profileTemplate.income.variability,
       // Generate 12 months of income with variations
-      monthly_history: Array.from({ length: 12 }, () => {
-        const variation = profileTemplate.income.variability === 'high' ? 0.4 : 0.2;
-        const variedIncome = baseIncome * (1 + (Math.random() * variation * 2 - variation));
-        return Math.floor(variedIncome);
-      })
+      monthly_history: (() => {
+        const history = [];
+        for (let month = 0; month < 12; month++) {
+          const variation = profileTemplate.income.variability === 'high' ? 0.4 : 0.2;
+          const variedIncome = baseIncome * (1 + (Math.random() * variation * 2 - variation));
+          history.push(Math.floor(variedIncome));
+        }
+        return history;
+      })()
     };
   }
 
   // 3. Generate expense breakdown
-  static generateExpenses(profileTemplate: ProfileTemplate, income: number): ExpensesData {
+  static generateExpenses(income: number): ExpensesData {
     const expenses: { [key: string]: number } = {};
 
-    Object.keys(profileTemplate.expenses).forEach(category => {
-      const range = profileTemplate.expenses[category].range;
-      expenses[category] = this.randomInRange(range[0], range[1]);
-    });
+    // Use income to calculate proportional expenses
+    const housing = Math.floor(income * 0.3);
+    const food = Math.floor(income * 0.15);
+    const transportation = Math.floor(income * 0.1);
+    const entertainment = Math.floor(income * 0.05);
+    const utilities = Math.floor(income * 0.08);
+    const miscellaneous = Math.floor(income * 0.07);
 
-    return expenses;
+    return {
+      housing,
+      food,
+      transportation,
+      entertainment,
+      utilities,
+      miscellaneous
+    };
   }
 
   // 4. Generate bank accounts based on user selection and details
-  static generateBankAccounts(user: User, selectedBanks: string[], profileType: string, profileTemplate: ProfileTemplate): { [key: string]: BankAccount } {
+  static generateBankAccounts(user: User, selectedBanks: string[], profileType: string): { [key: string]: BankAccount } {
+    const profileTemplate = this.getProfileTemplate(profileType);
     const banks: { [key: string]: BankAccount } = {};
 
     selectedBanks.forEach(bankName => {
       const userBankDetails = user.accountDetails?.[bankName] || {};
 
       banks[bankName] = {
-        savings_account: this.generateSavingsAccount(userBankDetails.savings, profileTemplate),
-        salary_account: this.generateSalaryAccount(userBankDetails.salary, profileTemplate),
-        credit_card: this.generateCreditCard(userBankDetails.creditCard, profileTemplate),
+        savings_account: this.generateSavingsAccount(userBankDetails.savings),
+        salary_account: this.generateSalaryAccount(userBankDetails.salary),
+        credit_card: this.generateCreditCard(userBankDetails.creditCard),
         // Add appropriate loan based on user data or profile
         loans: this.generateLoans(user, profileTemplate),
         investments: this.generateInvestments(userBankDetails.investment, profileTemplate)
@@ -76,7 +91,7 @@ export class FinancialDataGenerator {
   }
 
   // Generate savings account based on user details
-  static generateSavingsAccount(userSavings: SavingsAccountDetails | undefined, profileTemplate: ProfileTemplate) {
+  static generateSavingsAccount(userSavings: SavingsAccountDetails | undefined) {
     if (userSavings?.balance) {
       // Parse balance range and pick a value
       const balanceRange = userSavings.balance.split('-').map((s: string) => parseInt(s.replace(/,/g, '')));
@@ -100,7 +115,7 @@ export class FinancialDataGenerator {
   }
 
   // Generate salary account based on user details
-  static generateSalaryAccount(userSalary: SalaryAccountDetails | undefined, profileTemplate: ProfileTemplate) {
+  static generateSalaryAccount(userSalary: SalaryAccountDetails | undefined) {
     if (userSalary?.balance) {
       const balanceRange = userSalary.balance.split('-').map((s: string) => parseInt(s.replace(/,/g, '')));
       const balance = balanceRange.length === 2 ? this.randomInRange(balanceRange[0], balanceRange[1]) : parseInt(userSalary.balance.replace(/,/g, ''));
@@ -120,7 +135,7 @@ export class FinancialDataGenerator {
   }
 
   // Generate credit card based on user details
-  static generateCreditCard(userCreditCard: CreditCardDetails | undefined, profileTemplate: ProfileTemplate) {
+  static generateCreditCard(userCreditCard: CreditCardDetails | undefined) {
     if (userCreditCard?.limit) {
       const limitRange = userCreditCard.limit.split('-').map((s: string) => parseInt(s.replace(/,/g, '')));
       const limit = limitRange.length === 2 ? this.randomInRange(limitRange[0], limitRange[1]) : parseInt(userCreditCard.limit.replace(/,/g, ''));
@@ -255,8 +270,8 @@ export class FinancialDataGenerator {
     const profileTemplate = this.getProfileTemplate(profileType);
 
     const income = this.generateIncome(user, profileTemplate);
-    const expenses = this.generateExpenses(profileTemplate, income.monthly);
-    const banks = this.generateBankAccounts(user, selectedBanks, profileType, profileTemplate);
+    const expenses = this.generateExpenses(income.monthly);
+    const banks = this.generateBankAccounts(user, selectedBanks, profileType);
 
     // Calculate totals
     const totalExpenses = Object.values(expenses).reduce((sum: number, val: number) => sum + val, 0);
