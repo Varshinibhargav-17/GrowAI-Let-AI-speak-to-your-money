@@ -2,15 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-
-  // ✅ Ignore linting during build
   eslint: {
     ignoreDuringBuilds: true,
   },
-
-  // ✅ Ignore TypeScript errors during build
   typescript: {
     ignoreBuildErrors: true,
+  },
+  // Prevent any experimental strict checks during build
+  experimental: {
+    esmExternals: false,
   },
 };
 
