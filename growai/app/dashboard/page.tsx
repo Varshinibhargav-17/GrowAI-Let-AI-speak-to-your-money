@@ -55,6 +55,7 @@ export default function DashboardPage() {
   const [taxData, setTaxData] = useState<TaxData | null>(null);
   const [activeNudgeCategory, setActiveNudgeCategory] = useState("All");
   const [financialData, setFinancialData] = useState<FinancialData | null>(null);
+  const [loading, setLoading] = useState(true);
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -95,84 +96,77 @@ export default function DashboardPage() {
   // Financial data initialization using FinancialDataGenerator
   useEffect(() => {
     const loadFinancialData = async () => {
+      setLoading(true);
       let rawGeneratedData: any = null;
       let transformedData: FinancialData | null = null;
 
       try {
-        // First try to fetch existing financial data from database
+        // Always try to fetch user profile first
         const profileRes = await fetch('/api/profile');
+        let userProfile = {
+          financialProfileType: 'young_professional',
+          selectedBanks: ['HDFC', 'ICICI'],
+          accountDetails: {}
+        };
+
         if (profileRes.ok) {
           const profileData = await profileRes.json();
+          userProfile = {
+            financialProfileType: profileData?.financialProfileType || 'young_professional',
+            selectedBanks: profileData?.selectedBanks || ['HDFC', 'ICICI'],
+            accountDetails: profileData?.accountDetails || {}
+          };
+
+          // Check if we have stored financial data
           if (profileData.financialData) {
             setFinancialData(profileData.financialData);
             transformedData = profileData.financialData;
-          } else {
-            // If no stored data, generate new data based on user profile
-            const profileType = profileData?.financialProfileType || 'young_professional';
-            const selectedBanks = profileData?.selectedBanks || ['HDFC', 'ICICI'];
-
-            rawGeneratedData = FinancialDataGenerator.generateFinancialData(profileType, selectedBanks);
-            // Transform generated data to match FinancialData interface
-            transformedData = {
-              income: {
-                monthly: rawGeneratedData.income.monthly
-              },
-              expenses: rawGeneratedData.expenses,
-              investments: {
-                total: Object.values(rawGeneratedData.banks).reduce((sum: number, bank: any) =>
-                  sum + (bank.investments?.mutual_funds || 0) +
-                  (bank.investments?.stocks || 0) +
-                  (bank.investments?.fixed_deposits || 0), 0)
-              },
-              debt: {
-                creditCard: {
-                  utilization: Object.values(rawGeneratedData.banks).reduce((max: number, bank: any) =>
-                    Math.max(max, bank.credit_card?.utilization_rate || 0), 0) / 100
-                }
-              },
-              savings: {
-                emergency: rawGeneratedData.summary.monthly_savings * 3 // Approximate emergency fund
-              }
-            };
-            setFinancialData(transformedData);
-
-            // Store the transformed data in database
-            await fetch('/api/profile', {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ financialData: transformedData }),
-            });
           }
-        } else {
-          // Fallback to default data if profile fetch fails
-          rawGeneratedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
-          transformedData = {
-            income: {
-              monthly: rawGeneratedData.income.monthly
-            },
-            expenses: rawGeneratedData.expenses,
-            investments: {
-              total: Object.values(rawGeneratedData.banks).reduce((sum: number, bank: any) =>
-                sum + (bank.investments?.mutual_funds || 0) +
-                (bank.investments?.stocks || 0) +
-                (bank.investments?.fixed_deposits || 0), 0)
-            },
-            debt: {
-              creditCard: {
-                utilization: Object.values(rawGeneratedData.banks).reduce((max: number, bank: any) =>
-                  Math.max(max, bank.credit_card?.utilization_rate || 0), 0) / 100
-              }
-            },
-            savings: {
-              emergency: rawGeneratedData.summary.monthly_savings * 3
-            }
-          };
-          setFinancialData(transformedData);
         }
+
+        // Generate new data based on user profile if no stored data or always generate fresh
+        rawGeneratedData = FinancialDataGenerator.generateFinancialData(userProfile, userProfile.selectedBanks);
+
+        // Transform generated data to match FinancialData interface
+        transformedData = {
+          income: {
+            monthly: rawGeneratedData.income.monthly
+          },
+          expenses: rawGeneratedData.expenses,
+          investments: {
+            total: Object.values(rawGeneratedData.banks).reduce((sum: number, bank: any) =>
+              sum + (bank.investments?.mutual_funds || 0) +
+              (bank.investments?.stocks || 0) +
+              (bank.investments?.fixed_deposits || 0), 0)
+          },
+          debt: {
+            creditCard: {
+              utilization: Object.values(rawGeneratedData.banks).reduce((max: number, bank: any) =>
+                Math.max(max, bank.credit_card?.utilization_rate || 0), 0) / 100
+            }
+          },
+          savings: {
+            emergency: rawGeneratedData.summary.monthly_savings * 3 // Approximate emergency fund
+          }
+        };
+        setFinancialData(transformedData);
+
+        // Store the transformed data in database
+        await fetch('/api/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ financialData: transformedData }),
+        });
+
       } catch (error) {
         console.error('Error loading financial data:', error);
-        // Fallback to default data
-        rawGeneratedData = FinancialDataGenerator.generateFinancialData('young_professional', ['HDFC', 'ICICI']);
+        // Generate default data as last resort
+        const defaultUser = {
+          financialProfileType: 'young_professional',
+          selectedBanks: ['HDFC', 'ICICI'],
+          accountDetails: {}
+        };
+        rawGeneratedData = FinancialDataGenerator.generateFinancialData(defaultUser, defaultUser.selectedBanks);
         transformedData = {
           income: {
             monthly: rawGeneratedData.income.monthly
@@ -195,6 +189,8 @@ export default function DashboardPage() {
           }
         };
         setFinancialData(transformedData);
+      } finally {
+        setLoading(false);
       }
 
       // Calculate tax data using the transformed financial data
@@ -471,8 +467,26 @@ export default function DashboardPage() {
         <div className="space-y-8">
           {/* Quick Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-slide-up">
-            {(() => {
-              if (financialData) {
+            {loading ? (
+              <>
+                <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-green-200 shadow-lg animate-pulse">
+                  <div className="h-12 bg-gray-200 rounded mb-4"></div>
+                  <div className="h-8 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded"></div>
+                </div>
+                <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-green-200 shadow-lg animate-pulse">
+                  <div className="h-12 bg-gray-200 rounded mb-4"></div>
+                  <div className="h-8 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded"></div>
+                </div>
+                <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-green-200 shadow-lg animate-pulse">
+                  <div className="h-12 bg-gray-200 rounded mb-4"></div>
+                  <div className="h-8 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded"></div>
+                </div>
+              </>
+            ) : financialData ? (
+              (() => {
                 const income = financialData.income.monthly;
                 const expenses = Object.values(financialData.expenses).reduce((sum: number, val: any) => sum + (typeof val === 'number' ? val : 0), 0);
                 const savings = income - expenses;
@@ -487,12 +501,6 @@ export default function DashboardPage() {
                       </div>
                       <p className="text-sm font-semibold text-gray-600 mb-1">Monthly Income</p>
                       <p className="text-3xl font-bold text-gray-900">₹{income.toLocaleString()}</p>
-                      <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
-                        </svg>
-                        +12% from last month
-                      </p>
                     </div>
 
                     <div className="group bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-green-200 shadow-lg hover:shadow-xl hover:border-green-400 transition-all duration-300 hover:-translate-y-1">
@@ -522,16 +530,19 @@ export default function DashboardPage() {
                     </div>
                   </>
                 );
-              } else {
-                return (
-                  <>
-                    <DashboardCard title="Monthly Income" amount="₹60,000" type="income" />
-                    <DashboardCard title="Expenses" amount="₹45,000" type="expense" />
-                    <DashboardCard title="Savings" amount="₹15,000" type="savings" />
-                  </>
-                );
-              }
-            })()}
+              })()
+            ) : (
+              <div className="col-span-3 flex items-center justify-center py-16">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-600 font-medium">Failed to load financial data. Please try refreshing the page.</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Charts */}

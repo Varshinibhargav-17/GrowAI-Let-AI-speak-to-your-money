@@ -4,6 +4,21 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
+// Retry function with exponential backoff
+async function retryWithBackoff<T>(fn: () => Promise<T>, attempts = 3, delayMs = 500) {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastErr = e;
+      // exponential backoff
+      await new Promise(r => setTimeout(r, delayMs * Math.pow(2, i)));
+    }
+  }
+  throw lastErr;
+}
+
 export async function POST(request: Request) {
   let financialData: Record<string, unknown> = {};
   try {
@@ -15,7 +30,7 @@ export async function POST(request: Request) {
 
     // Get the model
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-2.0-flash-lite",
       generationConfig: {
         maxOutputTokens: 500,
         temperature: 0.7,
@@ -54,12 +69,23 @@ export async function POST(request: Request) {
 
     console.log('🔧 Prompt created, calling Gemini...');
 
-    // Generate content
-    const result = await model.generateContent(prompt);
+    // Generate content with retry logic
+    const result = await retryWithBackoff(() => model.generateContent(prompt), 4, 300);
     const response = await result.response;
-    const text = response.text();
+    // await the response text (response.text() returns a Promise)
+    const text = typeof response?.text === 'function' ? await response.text() : String(response ?? '');
 
-    console.log('✅ Gemini response received:', text.substring(0, 100) + '...');
+    const preview = (typeof text === 'string' && text.length > 0) ? text.substring(0, 100) + '...' : '[empty]';
+    console.log('✅ Gemini response received:', preview);
+
+    if (!text || String(text).trim().length === 0) {
+      console.warn('⚠️ Gemini returned empty text.');
+      return NextResponse.json({
+        success: false,
+        error: 'empty_response',
+        response: 'AI returned an empty response. Please try again in a moment.'
+      }, { status: 502 });
+    }
 
     return NextResponse.json({
       success: true,
