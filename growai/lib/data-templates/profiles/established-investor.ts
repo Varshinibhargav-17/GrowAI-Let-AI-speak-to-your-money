@@ -1,5 +1,7 @@
 export const establishedInvestorTemplate = {
   profile: {
+    name: "Established Investor",
+    description: "Mid-career professional with established investments and business interests",
     type: "established_investor",
     age_range: [35, 50],
     risk_tolerance: "medium",

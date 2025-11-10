@@ -1,5 +1,7 @@
 export const youngProfessionalTemplate = {
   profile: {
+    name: "Young Professional",
+    description: "Early career professional focused on building financial foundations",
     type: "young_professional",
     risk_tolerance: "medium_high",
     financial_focus: ["emergency_fund", "debt_repayment", "skill_investment"]

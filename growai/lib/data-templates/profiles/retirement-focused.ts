@@ -1,5 +1,7 @@
 export const retirementFocusedTemplate = {
   profile: {
+    name: "Retirement Focused",
+    description: "Pre-retirement professional planning for financial independence and legacy",
     type: "retirement_focused",
     age_range: [50, 65],
     risk_tolerance: "conservative",
@@ -13,7 +15,8 @@ export const retirementFocusedTemplate = {
     sources: ["business_revenue", "investment_income", "rental_income", "consulting"],
     seasonal_pattern: {
       stable_months: "all", // More stable income pattern
-      high_months: [2, 3, 10, 11] // March, April, Oct, Nov (festival seasons)
+      high_months: [2, 3, 10, 11], // March, April, Oct, Nov (festival seasons)
+      low_months: [] // No low months for retirement focused
     },
     growth_rate: 0.05 // 5% annual income growth (conservative)
   },

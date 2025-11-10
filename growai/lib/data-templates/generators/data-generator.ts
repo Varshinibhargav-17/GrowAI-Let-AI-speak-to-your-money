@@ -2,7 +2,7 @@ import { youngProfessionalTemplate } from '../profiles/young-professional';
 import { establishedInvestorTemplate } from '../profiles/established-investor';
 import { retirementFocusedTemplate } from '../profiles/retirement-focused';
 import { bankAccountTemplates } from '../banks/bank-templates';
-import { User, ProfileTemplate, IncomeData, ExpensesData, BankAccount, Loan, FinancialData, SavingsAccountDetails, SalaryAccountDetails, CreditCardDetails, InvestmentDetails } from '../../types';
+import { User, ProfileTemplate, IncomeData, ExpensesData, BankAccount, Loan, FinancialData, SavingsAccountDetails, SalaryAccountDetails, CreditCardDetails, InvestmentDetails, BankDetails } from '../../types';
 
 export class FinancialDataGenerator {
   // 1. Generate random number within range
@@ -35,7 +35,7 @@ export class FinancialDataGenerator {
       sources: profileTemplate.income.sources,
       variability: profileTemplate.income.variability,
       // Generate 12 months of income with variations
-      monthly_history: Array.from({ length: 12 }, (_, i) => {
+      monthly_history: Array.from({ length: 12 }, () => {
         const variation = profileTemplate.income.variability === 'high' ? 0.4 : 0.2;
         const variedIncome = baseIncome * (1 + (Math.random() * variation * 2 - variation));
         return Math.floor(variedIncome);
@@ -180,7 +180,7 @@ export class FinancialDataGenerator {
 
     // Check user bank loan details
     if (user.accountDetails) {
-      Object.values(user.accountDetails).forEach((bankDetail: any) => {
+      Object.values(user.accountDetails).forEach((bankDetail: BankDetails) => {
         if (bankDetail.loan && bankDetail.loan.type && bankDetail.loan.type !== '') {
           const loanKey = bankDetail.loan.type.toLowerCase().replace(' ', '_');
           loans[loanKey] = {
@@ -280,12 +280,12 @@ export class FinancialDataGenerator {
 
   // 7. Helper to get profile template
   static getProfileTemplate(profileType: string): ProfileTemplate {
-    const templates: { [key: string]: any } = {
+    const templates: Record<string, ProfileTemplate> = {
       'young_professional': youngProfessionalTemplate,
       'established_investor': establishedInvestorTemplate,
       'retirement_focused': retirementFocusedTemplate
     };
-    return templates[profileType] as ProfileTemplate;
+    return templates[profileType];
   }
 
   // 8. Calculate net worth from all accounts

@@ -64,15 +64,16 @@ export interface ProfileTemplate {
     employment_type?: string;
   };
   income: {
-    monthly_range: [number, number];
+    monthly_range: number[];
     sources: string[];
     variability: string;
-    seasonal_pattern?: { high_months: number[]; low_months: number[] };
+    seasonal_pattern?: { high_months: number[]; low_months: number[]; stable_months?: string };
     growth_rate?: number;
   };
-  expenses: { [key: string]: { range: [number, number] } };
-  investments?: { [key: string]: { range: [number, number] } };
-  debts?: { [key: string]: any }; // Can refine later
+  expenses: { [key: string]: any };
+  investments?: { [key: string]: any };
+  debts?: any;
+  assets?: any;
   financial_goals?: any;
   retirement_planning?: any;
 }
