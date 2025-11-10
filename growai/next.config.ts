@@ -3,13 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  // ✅ Ignore linting during build
   eslint: {
-    // ✅ Ignore ESLint errors during build
     ignoreDuringBuilds: true,
   },
 
+  // ✅ Ignore TypeScript errors during build
   typescript: {
-    // ✅ Ignore TypeScript errors during build (won’t stop deployment)
     ignoreBuildErrors: true,
   },
 };
