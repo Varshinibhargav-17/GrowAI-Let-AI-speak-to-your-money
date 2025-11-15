@@ -17,7 +17,7 @@ A comprehensive AI-powered financial management platform designed specifically f
 
 ### AI-Powered Features
 - **Intelligent Chat Assistant**: Conversational AI using Google Gemini 2.0 Flash-Lite for personalized financial advice
-- **Smart Nudges**: Rule-based and AI-generated recommendations for financial optimization
+- **Smart Nudges**: Rule-based  recommendations for financial optimization
 - **Tax Planning**: Automated tax estimation based on Indian tax slabs with quarterly payment tracking
 - **Expense Analysis**: Detailed breakdown of spending patterns with actionable insights
 
