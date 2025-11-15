@@ -21,7 +21,7 @@ export default function About() {
             About GrowAI
           </h1>
           <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
-            Smarter money management for freelancers, gig workers, consultants,
+            GrowAI is designed specifically for freelancers, gig workers, consultants,
             and small business owners. With GrowAI, your finances become simple,
             actionable, and stress-free.
           </p>

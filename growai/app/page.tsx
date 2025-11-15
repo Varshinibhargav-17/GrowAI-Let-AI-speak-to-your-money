@@ -31,7 +31,7 @@ export default function HomePage() {
 
         {/* Enhanced Subheadline */}
         <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg md:text-xl text-neutral-600 leading-relaxed animate-fade-in-delay px-4">
-          Smart, secure and scalable financial management built for modern individuals and businesses.
+          Smart, secure and scalable financial management built specifically for freelancers, gig workers, consultants, and small business owners.
           Powered by AI, designed for growth.
         </p>
 

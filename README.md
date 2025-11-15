@@ -1,11 +1,11 @@
-# GrowAI - AI-Powered Financial Advisor
+# GrowAI - AI-Powered Financial Advisor for Freelancers & Self-Employed
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.2-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-8.18.0-green)](https://www.mongodb.com/)
 [![Gemini AI](https://img.shields.io/badge/Gemini_AI-2.0--flash--lite-orange)](https://ai.google.dev/)
 
-A comprehensive AI-powered financial management platform that provides personalized financial insights, tax planning, and intelligent nudges based on user profiles and bank account data.
+A comprehensive AI-powered financial management platform designed specifically for freelancers, gig workers, consultants, and small business owners. Provides personalized financial insights, tax planning, and intelligent nudges based on user profiles and bank account data.
 
 ## 🚀 Features
 
